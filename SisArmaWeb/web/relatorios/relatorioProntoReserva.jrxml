@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<!-- Created with Jaspersoft Studio version 6.5.0.final using JasperReports Library version 6.5.0  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ProntoReserva" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="80c70099-2fac-4cb0-9ac9-fab8c47d7c7d">
 	<property name="ireport.zoom" value="1.100000000000001"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SisArma"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="New Data Adapter "/>
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<style name="Title" forecolor="#FFFFFF" fontName="Arial" fontSize="50" isBold="false"/>
 	<style name="SubTitle" forecolor="#CCCCCC" fontName="Arial" fontSize="18" isBold="false" pdfFontName="Arial"/>
@@ -16,26 +16,38 @@
 			<style mode="Opaque" backcolor="#F0EFEF"/>
 		</conditionalStyle>
 	</style>
+	<parameter name="armeiro" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="inspecionador" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
 	<queryString>
 		<![CDATA[select 
-if(a.nome is null,armamento.nome,a.nome) nome,
+armamento.nome as nome,
+ifnull(a.nome, '-') as arma,
 ifnull(c.nome, '-') as calibre,
 ifnull(f.nome, '-') as fabricante,
 if(armamento.serie is null, ifnull(armamento.qtd,0),sum(ifnull(armamento.qtd,0))) qtd, 
-sum(ifnull(item.qtd, '0')) as  fora
+sum(ifnull(item.qtd, '0')) as  fora,
+(select login from militar where militar.login = $P{armeiro}) as armeiro,
+(select login from militar where militar.login = $P{inspecionador}) as inspecionador
 from item 
 right join equipamento armamento on armamento.id = item.idEquipamento
 and item.statusIte = 'Cautelado'  
 left join arma a on a.id = armamento.idArma
 left join fabricante f on f.id = armamento.idFabricante
 left join calibre c on c.id = armamento.idCalibre
-where armamento.statusEqp <> 'PARTICULAR' AND armamento.statusEqp <> 'RECOLHIDO' 
+where armamento.statusEqp <> 'PARTICULAR' OR armamento.statusEqp <> 'RECOLHIDO' 
 group by a.nome, armamento.nome order by fora desc ,armamento.tipo, armamento.nome]]>
 	</queryString>
 	<field name="nome" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.label" value="nome"/>
 		<property name="com.jaspersoft.studio.field.tree.path" value="equipamento"/>
 		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="arma" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="arma"/>
 	</field>
 	<field name="calibre" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.label" value="calibre"/>
@@ -47,8 +59,14 @@ group by a.nome, armamento.nome order by fora desc ,armamento.tipo, armamento.no
 		<property name="com.jaspersoft.studio.field.label" value="qtd"/>
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
-	<field name="fora" class="java.lang.Double">
+	<field name="fora" class="java.lang.Integer">
 		<property name="com.jaspersoft.studio.field.label" value="fora"/>
+	</field>
+	<field name="armeiro" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="armeiro"/>
+	</field>
+	<field name="inspecionador" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="inspecionador"/>
 	</field>
 	<variable name="valor" class="java.lang.Integer">
 		<variableExpression><![CDATA[$F{fora}.sum( $F{qtd}, $F{fora} )]]></variableExpression>
@@ -63,7 +81,7 @@ group by a.nome, armamento.nome order by fora desc ,armamento.tipo, armamento.no
 		<variableExpression><![CDATA[$F{qtd}]]></variableExpression>
 	</variable>
 	<title>
-		<band height="138" splitType="Stretch">
+		<band height="159" splitType="Stretch">
 			<staticText>
 				<reportElement x="168" y="54" width="224" height="54" uuid="11c95780-845d-4b34-825e-4c9830758931"/>
 				<textElement textAlignment="Center">
@@ -76,7 +94,7 @@ CENTRO DE INSTRUÇÃO DE GUERRA NA SELVA
 (Centro Coronel Jorge Teixeira/1999)]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="2" y="116" width="552" height="20" uuid="b0d1d0f9-a10d-4542-a961-00136efc6205"/>
+				<reportElement x="4" y="112" width="552" height="20" uuid="b0d1d0f9-a10d-4542-a961-00136efc6205"/>
 				<textElement textAlignment="Center" verticalAlignment="Top">
 					<font fontName="Arial" size="14" isBold="false"/>
 				</textElement>
@@ -104,8 +122,22 @@ CENTRO DE INSTRUÇÃO DE GUERRA NA SELVA
 			</line>
 			<image>
 				<reportElement x="255" y="4" width="50" height="50" uuid="621997dd-a2c5-49a2-9870-6cf9ea879bc7"/>
-				<imageExpression><![CDATA["/var/lib/tomcat8/webapps/SisArmaWeb/relatorios/brasao.png"]]></imageExpression>
+				<imageExpression><![CDATA["C:/Sisarma/relatorio/brasao.png"]]></imageExpression>
 			</image>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="143" width="555" height="16" forecolor="#FFFFFF" backcolor="#999999" uuid="10d60c5a-6038-4822-a825-815ba97f1177"/>
+				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0">
+					<pen lineWidth="1.5" lineStyle="Solid" lineColor="#080100"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="13" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Relação dos Equipamentos Disponível e Cautelado na Reserva]]></text>
+			</staticText>
 		</band>
 	</title>
 	<pageHeader>
@@ -115,86 +147,100 @@ CENTRO DE INSTRUÇÃO DE GUERRA NA SELVA
 		<band height="21" splitType="Stretch">
 			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
 			<staticText>
-				<reportElement style="Column header" mode="Opaque" x="0" y="0" width="176" height="20" forecolor="#030303" backcolor="#E0DCDC" uuid="27ca0b55-d798-4827-a596-80d9cdc63f2c"/>
+				<reportElement style="Column header" mode="Opaque" x="0" y="0" width="100" height="20" forecolor="#FFFFFF" backcolor="#999999" uuid="27ca0b55-d798-4827-a596-80d9cdc63f2c"/>
 				<box>
 					<pen lineColor="#FFFCFC"/>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFCFC"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFCFC"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFCFC"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFCFC"/>
 				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="11" isBold="false"/>
+				<textElement textAlignment="Justified" verticalAlignment="Middle">
+					<font fontName="Arial" size="11" isBold="true"/>
 				</textElement>
-				<text><![CDATA[Nomeclatura]]></text>
+				<text><![CDATA[ Equipamento]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Column header" mode="Opaque" x="300" y="0" width="60" height="20" forecolor="#030303" backcolor="#E0DCDC" uuid="a2f4de9c-0ec2-49fa-8547-53580e7d1d7f"/>
+				<reportElement style="Column header" mode="Opaque" x="100" y="0" width="110" height="20" forecolor="#FFFFFF" backcolor="#999999" uuid="6e3998a1-cb88-42d1-bc14-fcd250bae729"/>
 				<box>
 					<pen lineColor="#FFFFFF"/>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="11" isBold="false"/>
+					<font fontName="Arial" size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Arma]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Column header" mode="Opaque" x="300" y="0" width="60" height="20" forecolor="#FFFFFF" backcolor="#999999" uuid="a2f4de9c-0ec2-49fa-8547-53580e7d1d7f"/>
+				<box>
+					<pen lineColor="#FFFFFF"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="11" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Calibre]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Column header" mode="Opaque" x="177" y="0" width="122" height="20" forecolor="#030303" backcolor="#E0DCDC" uuid="846accb2-bacc-495d-8c9c-4f06d7405931"/>
+				<reportElement style="Column header" mode="Opaque" x="210" y="0" width="90" height="20" forecolor="#FFFFFF" backcolor="#999999" uuid="846accb2-bacc-495d-8c9c-4f06d7405931"/>
 				<box>
 					<pen lineColor="#FFFFFF"/>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="11" isBold="false"/>
+					<font fontName="Arial" size="11" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Fabricante]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Column header" mode="Opaque" x="360" y="0" width="80" height="20" forecolor="#030303" backcolor="#E0DCDC" uuid="24086013-6296-408d-9065-fc6f14878f8c"/>
+				<reportElement style="Column header" mode="Opaque" x="360" y="0" width="80" height="20" forecolor="#FFFFFF" backcolor="#999999" uuid="24086013-6296-408d-9065-fc6f14878f8c"/>
 				<box>
 					<pen lineColor="#FFFFFF"/>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="11" isBold="false"/>
+					<font fontName="Arial" size="11" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Reserva]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Column header" mode="Opaque" x="440" y="0" width="61" height="20" forecolor="#030303" backcolor="#E0DCDC" uuid="8b6e2d79-2733-40d0-a2aa-0a4626987800"/>
+				<reportElement style="Column header" mode="Opaque" x="440" y="0" width="61" height="20" forecolor="#FFFFFF" backcolor="#999999" uuid="8b6e2d79-2733-40d0-a2aa-0a4626987800"/>
 				<box>
 					<pen lineColor="#FFFFFF"/>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="11" isBold="false"/>
+					<font fontName="Arial" size="11" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Cautelado]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Column header" mode="Opaque" x="501" y="0" width="54" height="20" forecolor="#030303" backcolor="#E0DCDC" uuid="7318cd65-dc9b-437c-9b55-97d31dd8e53f"/>
+				<reportElement style="Column header" mode="Opaque" x="501" y="0" width="54" height="20" forecolor="#FFFFFF" backcolor="#999999" uuid="7318cd65-dc9b-437c-9b55-97d31dd8e53f"/>
 				<box>
 					<pen lineColor="#FFFFFF"/>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="11" isBold="false"/>
+					<font fontName="Arial" size="11" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Total]]></text>
 			</staticText>
@@ -212,9 +258,7 @@ CENTRO DE INSTRUÇÃO DE GUERRA NA SELVA
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textField isStretchWithOverflow="true">
-					<reportElement style="Detail" positionType="Float" x="0" y="0" width="176" height="15" uuid="36523077-79e9-4a96-b5f5-d496eeea6d94">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					</reportElement>
+					<reportElement style="Detail" positionType="Float" x="0" y="0" width="100" height="18" uuid="36523077-79e9-4a96-b5f5-d496eeea6d94"/>
 					<box>
 						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -222,14 +266,12 @@ CENTRO DE INSTRUÇÃO DE GUERRA NA SELVA
 						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					</box>
 					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font fontName="Arial" size="8"/>
+						<font fontName="Arial" size="9"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{nome}]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true">
-					<reportElement style="Detail" positionType="Float" x="300" y="0" width="60" height="15" uuid="e61901a9-81f3-4b88-9b58-4e053aec198e">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					</reportElement>
+					<reportElement style="Detail" positionType="Float" x="100" y="0" width="110" height="18" uuid="c56ca905-9614-4b8b-a8bb-f10d84730206"/>
 					<box>
 						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -237,14 +279,25 @@ CENTRO DE INSTRUÇÃO DE GUERRA NA SELVA
 						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					</box>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font fontName="Arial" size="8"/>
+						<font fontName="Arial" size="9"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{arma}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true">
+					<reportElement style="Detail" positionType="Float" x="300" y="0" width="60" height="18" uuid="e61901a9-81f3-4b88-9b58-4e053aec198e"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" size="9"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{calibre}]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true">
-					<reportElement style="Detail" positionType="Float" x="177" y="0" width="122" height="15" uuid="bed68486-0147-4a87-8f12-d38b67f709bd">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					</reportElement>
+					<reportElement style="Detail" positionType="Float" x="210" y="0" width="90" height="18" uuid="bed68486-0147-4a87-8f12-d38b67f709bd"/>
 					<box>
 						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -252,14 +305,12 @@ CENTRO DE INSTRUÇÃO DE GUERRA NA SELVA
 						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					</box>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font fontName="Arial" size="8"/>
+						<font fontName="Arial" size="9"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{fabricante}]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true">
-					<reportElement style="Detail" positionType="Float" x="360" y="0" width="80" height="15" uuid="f3603699-fddd-4937-aeb8-bd6c4da4b48d">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					</reportElement>
+					<reportElement style="Detail" positionType="Float" x="360" y="0" width="80" height="18" uuid="f3603699-fddd-4937-aeb8-bd6c4da4b48d"/>
 					<box>
 						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -267,14 +318,12 @@ CENTRO DE INSTRUÇÃO DE GUERRA NA SELVA
 						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					</box>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font fontName="Arial" size="8"/>
+						<font fontName="Arial" size="9"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{qtd}]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true">
-					<reportElement style="Detail" positionType="Float" x="440" y="0" width="61" height="15" uuid="d3daa60d-c684-4dd0-bf6b-73dd66b46a73">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					</reportElement>
+					<reportElement style="Detail" positionType="Float" x="440" y="0" width="61" height="18" uuid="d3daa60d-c684-4dd0-bf6b-73dd66b46a73"/>
 					<box>
 						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -282,14 +331,12 @@ CENTRO DE INSTRUÇÃO DE GUERRA NA SELVA
 						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					</box>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font fontName="Arial" size="8"/>
+						<font fontName="Arial" size="9"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{fora}]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="true" isBlankWhenNull="false">
-					<reportElement style="Detail" positionType="Float" x="501" y="0" width="54" height="15" uuid="935c2e88-8204-4f52-92b5-0425be33c127">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					</reportElement>
+					<reportElement style="Detail" positionType="Float" x="501" y="0" width="54" height="18" uuid="935c2e88-8204-4f52-92b5-0425be33c127"/>
 					<box>
 						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -297,7 +344,7 @@ CENTRO DE INSTRUÇÃO DE GUERRA NA SELVA
 						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					</box>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font fontName="Arial" size="8"/>
+						<font fontName="Arial" size="9"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$V{valor}]]></textFieldExpression>
 				</textField>
@@ -305,55 +352,80 @@ CENTRO DE INSTRUÇÃO DE GUERRA NA SELVA
 		</band>
 	</detail>
 	<summary>
-		<band height="343">
+		<band height="290">
 			<subreport overflowType="Stretch">
-				<reportElement key="" positionType="Float" isPrintRepeatedValues="false" x="0" y="121" width="555" height="30" isRemoveLineWhenBlank="true" isPrintInFirstWholeBand="true" uuid="6e74d0b2-8be8-4a92-9721-635f929514e0"/>
+				<reportElement key="" positionType="Float" isPrintRepeatedValues="false" x="0" y="105" width="555" height="30" isPrintInFirstWholeBand="true" uuid="6e74d0b2-8be8-4a92-9721-635f929514e0"/>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA["/var/lib/tomcat8/webapps/SisArmaWeb/relatorios/relatorioProntoParticular.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA["C:/Sisarma/relatorio/relatorioProntoParticular.jasper"]]></subreportExpression>
 			</subreport>
 			<subreport overflowType="Stretch">
-				<reportElement key="" positionType="Float" isPrintRepeatedValues="false" x="0" y="42" width="555" height="30" isRemoveLineWhenBlank="true" isPrintInFirstWholeBand="true" uuid="6c675956-deb1-4d90-85c3-3fc8a2b6dd61"/>
+				<reportElement key="" positionType="Float" isPrintRepeatedValues="false" x="0" y="36" width="555" height="30" isPrintInFirstWholeBand="true" uuid="6c675956-deb1-4d90-85c3-3fc8a2b6dd61"/>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA["/var/lib/tomcat8/webapps/SisArmaWeb/relatorios/relatorioProntoIndisponivel.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA["C:/Sisarma/relatorio/relatorioProntoIndisponivel.jasper"]]></subreportExpression>
 			</subreport>
 			<subreport overflowType="Stretch">
-				<reportElement key="" positionType="Float" isPrintRepeatedValues="false" x="0" y="81" width="555" height="30" isRemoveLineWhenBlank="true" isPrintInFirstWholeBand="true" uuid="0436d023-9ba2-477f-aff4-a80c0b0876db"/>
+				<reportElement key="" positionType="Float" isPrintRepeatedValues="false" x="0" y="70" width="555" height="30" isPrintInFirstWholeBand="true" uuid="0436d023-9ba2-477f-aff4-a80c0b0876db"/>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA["/var/lib/tomcat8/webapps/SisArmaWeb/relatorios/relatorioProntoRecolhido.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA["C:/Sisarma/relatorio/relatorioProntoRecolhido.jasper"]]></subreportExpression>
 			</subreport>
 			<subreport overflowType="Stretch">
-				<reportElement key="" positionType="Float" isPrintRepeatedValues="false" x="0" y="2" width="555" height="30" isRemoveLineWhenBlank="true" isPrintInFirstWholeBand="true" uuid="8d1f5a89-cc9d-4ad2-8ebe-5b1bbe015f10"/>
+				<reportElement key="" positionType="Float" isPrintRepeatedValues="false" x="0" y="2" width="555" height="30" isPrintInFirstWholeBand="true" uuid="8d1f5a89-cc9d-4ad2-8ebe-5b1bbe015f10"/>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA["/var/lib/tomcat8/webapps/SisArmaWeb/relatorios/relatorioProntoReservaDetalhado.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA["C:/Sisarma/relatorio/relatorioProntoReservaDetalhado.jasper"]]></subreportExpression>
 			</subreport>
 			<staticText>
-				<reportElement positionType="Float" x="100" y="274" width="337" height="20" uuid="0fe326fa-2cb0-4014-8250-d874d29e4b63"/>
+				<reportElement positionType="Float" x="115" y="226" width="314" height="20" uuid="0fe326fa-2cb0-4014-8250-d874d29e4b63"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="12" isBold="true"/>
+					<font fontName="Arial" size="12"/>
 				</textElement>
 				<text><![CDATA[Comandante da Companhia Comando e Serviços]]></text>
 			</staticText>
-			<textField>
-				<reportElement positionType="Float" x="410" y="211" width="140" height="20" uuid="1ef87ed3-3267-42e3-ad82-7dff956af649"/>
+			<line>
+				<reportElement positionType="Float" x="202" y="222" width="150" height="1" uuid="920a7164-a951-4bc6-b1f2-c17044577d98">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+			</line>
+			<staticText>
+				<reportElement positionType="Float" x="8" y="170" width="72" height="20" uuid="b05087ad-cd87-4d38-b281-eeb736543183"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="10" isBold="true"/>
+					<font fontName="Arial" size="10"/>
 				</textElement>
-				<textFieldExpression><![CDATA[ARMEIRO]]></textFieldExpression>
+				<text><![CDATA[ARMEIRO -]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="360" y="170" width="102" height="20" uuid="7acbc022-4a8b-4585-819d-80e3d45c4ea8"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="10"/>
+				</textElement>
+				<text><![CDATA[INSPECIONADOR -]]></text>
+			</staticText>
+			<line>
+				<reportElement positionType="Float" x="33" y="168" width="88" height="1" uuid="558c13e2-7d07-4d69-892e-e4a10cb05379"/>
+			</line>
+			<textField>
+				<reportElement positionType="Float" x="77" y="170" width="100" height="20" uuid="1ef87ed3-3267-42e3-ad82-7dff956af649"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{armeiro}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement positionType="Float" x="4" y="211" width="216" height="18" uuid="777cde25-675a-4237-a321-fd79e3fbb741"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="10" isBold="true"/>
+				<reportElement positionType="Float" x="460" y="172" width="81" height="18" uuid="777cde25-675a-4237-a321-fd79e3fbb741"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="10"/>
 				</textElement>
-				<textFieldExpression><![CDATA[INSPECIONADOR]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{inspecionador}]]></textFieldExpression>
 			</textField>
 			<textField pattern="&apos;Manaus, AM&apos; dd &apos;de&apos; MMMMM &apos;de&apos; yyyy &apos;-&apos; HH:mm:ss a">
-				<reportElement positionType="Float" x="0" y="316" width="555" height="20" forecolor="#000000" uuid="8ff9723e-7e32-4436-bfeb-7567bd116bc0"/>
+				<reportElement positionType="Float" x="95" y="246" width="343" height="20" forecolor="#000000" uuid="8ff9723e-7e32-4436-bfeb-7567bd116bc0"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="Arial" size="11" isBold="false"/>
+					<font fontName="Arial" size="12" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
+			<line>
+				<reportElement positionType="Float" x="417" y="167" width="88" height="1" uuid="1c80066e-1c66-4e72-8550-161de5ed825c"/>
+			</line>
 		</band>
 	</summary>
 </jasperReport>
